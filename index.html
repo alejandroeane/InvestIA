@@ -1,149 +1,18 @@
 <!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>InvestIA</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 720px;
-      margin: 48px auto;
-      padding: 0 18px;
-      line-height: 1.5;
-    }
-    textarea, select, button {
-      font: inherit;
-    }
-    textarea {
-      width: 100%;
-      box-sizing: border-box;
-      min-height: 100px;
-      padding: 10px;
-    }
-    button {
-      margin-top: 12px;
-      padding: 9px 18px;
-      cursor: pointer;
-    }
-    #answer {
-      white-space: pre-wrap;
-      background: #f4f4f4;
-      padding: 16px;
-      margin-top: 24px;
-      min-height: 40px;
-    }
-    .notice {
-      color: #914d00;
-    }
-  </style>
-</head>
-<body>
-  <h1>InvestIA</h1>
-
-  <label for="language" id="languageLabel">Idioma:</label>
-  <select id="language">
-    <option value="es">Español</option>
-    <option value="en">English</option>
-  </select>
-
-  <p id="description">
-    Informes trimestrales y noticias financieras explicados con claridad.
-  </p>
-  <p class="notice" id="notice">
-    Prueba técnica: todavía no consulta informes, noticias ni datos actuales.
-  </p>
-
-  <form id="form">
-    <label for="question" id="questionLabel">Tu pregunta</label><br>
-    <textarea id="question" maxlength="500" required
-      placeholder="Por ejemplo: ¿qué puede explicar un informe trimestral?"></textarea><br>
-    <button type="submit" id="submitButton">Preguntar</button>
-  </form>
-
-  <div id="answer" role="status" aria-live="polite"></div>
-
-  <script>
-    const translations = {
-      es: {
-        languageLabel: "Idioma:",
-        description: "Informes trimestrales y noticias financieras explicados con claridad.",
-        notice: "Prueba técnica: todavía no consulta informes, noticias ni datos actuales.",
-        questionLabel: "Tu pregunta",
-        placeholder: "Por ejemplo: ¿qué puede explicar un informe trimestral?",
-        submitButton: "Preguntar",
-        loading: "Consultando a Groq...",
-        empty: "",
-        genericError: "No se pudo completar la consulta."
-      },
-      en: {
-        languageLabel: "Language:",
-        description: "Quarterly reports and financial news explained clearly.",
-        notice: "Technical test: reports, news and current data are not connected yet.",
-        questionLabel: "Your question",
-        placeholder: "For example: what can a quarterly report tell me?",
-        submitButton: "Ask",
-        loading: "Contacting Groq...",
-        empty: "",
-        genericError: "Could not complete the request."
-      }
-    };
-
-    const language = document.getElementById("language");
-    const question = document.getElementById("question");
-    const answer = document.getElementById("answer");
-    const button = document.getElementById("submitButton");
-
-    function updateLanguage() {
-      const lang = language.value;
-      const text = translations[lang];
-      document.documentElement.lang = lang;
-
-      for (const id of [
-        "languageLabel", "description", "notice",
-        "questionLabel", "submitButton"
-      ]) {
-        document.getElementById(id).textContent = text[id];
-      }
-
-      question.placeholder = text.placeholder;
-      answer.textContent = text.empty;
-    }
-
-    language.addEventListener("change", updateLanguage);
-
-    document.getElementById("form").addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const lang = language.value;
-      button.disabled = true;
-      answer.textContent = translations[lang].loading;
-
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            question: question.value.trim(),
-            language: lang
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || translations[lang].genericError);
-        }
-
-        answer.textContent = data.answer;
-      } catch (error) {
-        answer.textContent = error.message || translations[lang].genericError;
-      } finally {
-        button.disabled = false;
-      }
-    });
-
-    updateLanguage();
-  </script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>InvestIA - SEC filings explained</title><style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#e9edf5;background:#0e1524}body{max-width:800px;margin:0 auto;padding:32px 18px;line-height:1.55}h1{font-size:2rem;margin-bottom:.1em}h2{font-size:1.15rem}header{display:flex;justify-content:space-between;align-items:center;gap:12px}p{color:#c5cedf}.card{background:#192338;padding:18px;border:1px solid #33415d;border-radius:12px;margin:18px 0}textarea,button,select{font:inherit}textarea{box-sizing:border-box;display:block;width:100%;min-height:95px;color:#fff;background:#101a2b;border:1px solid #52617b;border-radius:8px;padding:12px}button{background:#94c5ff;border:0;border-radius:8px;padding:9px 18px;color:#07111c;cursor:pointer;margin-top:10px}button:disabled{opacity:.5;cursor:not-allowed}select{background:#24314a;color:#fff;padding:6px;border:1px solid #52617b}a{color:#a4cdff}#answer{white-space:pre-wrap;color:#fff}.small{font-size:.9rem}.badge{display:inline-block;background:#2b3b58;padding:2px 8px;margin:3px;border-radius:12px}label{display:block;margin-bottom:8px}
+</style></head><body>
+<header><div><h1>InvestIA</h1><p id="intro"></p></div><select id="language" aria-label="Language"><option value="en">English</option><option value="es">Español</option></select></header>
+<div class="card"><p id="scope"></p><p class="small" id="coverage">Loading coverage...</p></div>
+<form id="form" class="card"><label id="promptLabel" for="question"></label><textarea id="question" maxlength="500" required></textarea><button id="ask" type="submit"></button></form>
+<div id="result" class="card" hidden><h2 id="answerLabel"></h2><div id="answer" role="status" aria-live="polite"></div><h2 id="sourcesLabel"></h2><div id="sources"></div></div>
+<p class="small" id="disclaimer"></p>
+<script>
+const T={en:{intro:'Understand SEC company filings in plain language.',scope:'Currently covers selected U.S. companies and their latest SEC 10-Q or 10-K filings. No live prices, news or Spanish filings. Sector answers reflect only indexed companies.',coverage:'Loading coverage...',none:'No companies are indexed yet. The scheduled import must run first.',error:'Coverage is currently unavailable.',promptLabel:'Ask about a company, compare companies, or ask about a sector',placeholder:'How did Apple perform? Compare Apple and Microsoft. What do the covered technology companies report?',ask:'Ask',loading:'Reading SEC excerpts...',answerLabel:'Answer',sourcesLabel:'Original SEC filings',disclaimer:'For information only. Not financial advice. Check the original filing before making decisions.'},es:{intro:'Comprende los informes SEC de forma sencilla.',scope:'Incluye algunas empresas estadounidenses y sus últimos informes SEC 10-Q o 10-K. Sin cotizaciones en vivo, noticias ni informes españoles. El análisis sectorial solo abarca empresas indexadas.',coverage:'Cargando cobertura...',none:'Todavía no hay empresas indexadas. Debe ejecutarse la importación programada.',error:'La cobertura no está disponible ahora.',promptLabel:'Pregunta por una empresa, compara empresas o consulta un sector',placeholder:'¿Cómo le ha ido a Apple? Compara Apple y Microsoft. ¿Qué informan las tecnológicas cubiertas?',ask:'Preguntar',loading:'Leyendo fragmentos de la SEC...',answerLabel:'Respuesta',sourcesLabel:'Informes originales de la SEC',disclaimer:'Solo información, no asesoramiento financiero. Comprueba el informe original antes de decidir.'}};
+const $=id=>document.getElementById(id), lang=$('language'), history=[];let coverage=null;
+function paint(){const l=lang.value,t=T[l];document.documentElement.lang=l;for(const id of ['intro','scope','promptLabel','ask','answerLabel','sourcesLabel','disclaimer'])$(id).textContent=t[id];$('question').placeholder=t.placeholder; if(coverage){$('coverage').textContent=coverage.covered?.length?coverage.covered.map(x=>`${x.ticker} (${x.period}, ${x.form})`).join(' · '):t.none;}else $('coverage').textContent=t.error;}
+lang.addEventListener('change',()=>{localStorage.setItem('investia_lang',lang.value);paint()});
+const saved=localStorage.getItem('investia_lang');if(saved==='es'||saved==='en')lang.value=saved;paint();
+fetch('/api/status').then(r=>r.ok?r.json():Promise.reject()).then(data=>{coverage=data;paint()}).catch(()=>{coverage=null;paint()});
+$('form').addEventListener('submit',async e=>{e.preventDefault();const question=$('question').value.trim(),l=lang.value;if(!question)return;$('ask').disabled=true;$('result').hidden=false;$('answer').textContent=T[l].loading;$('sources').replaceChildren();try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:l,history})});const data=await r.json();if(!r.ok)throw Error(data.error||T[l].error);$('answer').textContent=data.answer;for(const s of data.sources||[]){const p=document.createElement('p'),a=document.createElement('a');a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=`[${s.id}] ${s.company} (${s.ticker}) · ${s.form} · ${s.period} · ${s.filed}`;p.append(a);$('sources').append(p)}history.push({question,tickers:data.route?.tickers||[],sector:data.route?.sector||''});if(history.length>4)history.shift()}catch(err){$('answer').textContent=err.message}finally{$('ask').disabled=false}});
+</script></body></html>
