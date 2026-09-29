@@ -4,10 +4,146 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>InvestIA</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 18px;
+      line-height: 1.5;
+    }
+    textarea, select, button {
+      font: inherit;
+    }
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 100px;
+      padding: 10px;
+    }
+    button {
+      margin-top: 12px;
+      padding: 9px 18px;
+      cursor: pointer;
+    }
+    #answer {
+      white-space: pre-wrap;
+      background: #f4f4f4;
+      padding: 16px;
+      margin-top: 24px;
+      min-height: 40px;
+    }
+    .notice {
+      color: #914d00;
+    }
+  </style>
 </head>
 <body>
   <h1>InvestIA</h1>
-  <p>Informes trimestrales y noticias financieras explicados con claridad.</p>
-  <p>Estamos preparando el asistente.</p>
+
+  <label for="language" id="languageLabel">Idioma:</label>
+  <select id="language">
+    <option value="es">Español</option>
+    <option value="en">English</option>
+  </select>
+
+  <p id="description">
+    Informes trimestrales y noticias financieras explicados con claridad.
+  </p>
+  <p class="notice" id="notice">
+    Prueba técnica: todavía no consulta informes, noticias ni datos actuales.
+  </p>
+
+  <form id="form">
+    <label for="question" id="questionLabel">Tu pregunta</label><br>
+    <textarea id="question" maxlength="500" required
+      placeholder="Por ejemplo: ¿qué puede explicar un informe trimestral?"></textarea><br>
+    <button type="submit" id="submitButton">Preguntar</button>
+  </form>
+
+  <div id="answer" role="status" aria-live="polite"></div>
+
+  <script>
+    const translations = {
+      es: {
+        languageLabel: "Idioma:",
+        description: "Informes trimestrales y noticias financieras explicados con claridad.",
+        notice: "Prueba técnica: todavía no consulta informes, noticias ni datos actuales.",
+        questionLabel: "Tu pregunta",
+        placeholder: "Por ejemplo: ¿qué puede explicar un informe trimestral?",
+        submitButton: "Preguntar",
+        loading: "Consultando a Groq...",
+        empty: "",
+        genericError: "No se pudo completar la consulta."
+      },
+      en: {
+        languageLabel: "Language:",
+        description: "Quarterly reports and financial news explained clearly.",
+        notice: "Technical test: reports, news and current data are not connected yet.",
+        questionLabel: "Your question",
+        placeholder: "For example: what can a quarterly report tell me?",
+        submitButton: "Ask",
+        loading: "Contacting Groq...",
+        empty: "",
+        genericError: "Could not complete the request."
+      }
+    };
+
+    const language = document.getElementById("language");
+    const question = document.getElementById("question");
+    const answer = document.getElementById("answer");
+    const button = document.getElementById("submitButton");
+
+    function updateLanguage() {
+      const lang = language.value;
+      const text = translations[lang];
+      document.documentElement.lang = lang;
+
+      for (const id of [
+        "languageLabel", "description", "notice",
+        "questionLabel", "submitButton"
+      ]) {
+        document.getElementById(id).textContent = text[id];
+      }
+
+      question.placeholder = text.placeholder;
+      answer.textContent = text.empty;
+    }
+
+    language.addEventListener("change", updateLanguage);
+
+    document.getElementById("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const lang = language.value;
+      button.disabled = true;
+      answer.textContent = translations[lang].loading;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: question.value.trim(),
+            language: lang
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || translations[lang].genericError);
+        }
+
+        answer.textContent = data.answer;
+      } catch (error) {
+        answer.textContent = error.message || translations[lang].genericError;
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    updateLanguage();
+  </script>
 </body>
 </html>
